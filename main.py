@@ -12,7 +12,7 @@ class Menu:
             print()
 
             if opcao == "0":
-                print("Sistema encerrado.")
+                print("Sistema encerrado. Até logo!")
                 break
 
             try:
@@ -44,23 +44,46 @@ class Menu:
                     print("Opção inválida. Digite um dos números do menu.")
                     continue
             except ErroAtletica as erro:
-                print(f"\n Não foi possível concluir: {erro}")
+                print(f"\nNão foi possível concluir: {erro}")
 
-            input("\n Pressione Enter para voltar ao menu...")
+            input("\nPressione Enter para voltar ao menu...")
 
-      def __mostrar_menu(self):
-        print("\n CONTROLE DE EMPRÉSTIMOS - ATLÉTICA ")
+    def __mostrar_menu(self):
+        print("\n========== CONTROLE DE EMPRÉSTIMOS - ATLÉTICA ==========")
         print(f"Data do sistema: {formatar_data(self.__atletica.data_atual)}")
-        print("1 - Emprestar equipamento")
-        print("2 - Devolver equipamento")
-        print("3 - Ver equipamentos disponíveis")
-        print("4 - Ver equipamentos emprestados")
-        print("5 - Histórico de uma pessoa")
-        print("6 - Histórico de um equipamento")
-        print("7 - Cadastrar pessoa")
-        print("8 - Cadastrar equipamento")
-        print("9 - Ver pessoas cadastradas")
-        print("10 - Remover pessoa")
-        print("11 - Remover equipamento")
-        print("12 - Alterar data do sistema")
-        print("0 - Sair")
+        print("  1 - Emprestar equipamento")
+        print("  2 - Devolver equipamento")
+        print("  3 - Ver equipamentos disponíveis")
+        print("  4 - Ver equipamentos emprestados")
+        print("  5 - Histórico de uma pessoa")
+        print("  6 - Histórico de um equipamento")
+        print("  7 - Cadastrar pessoa")
+        print("  8 - Cadastrar equipamento")
+        print("  9 - Ver pessoas cadastradas")
+        print(" 10 - Remover pessoa")
+        print(" 11 - Remover equipamento")
+        print(" 12 - Alterar data do sistema")
+        print("  0 - Sair")
+
+    def __imprimir_lista(self, titulo, linhas, mensagem_vazia):
+        # mostra uma lista de textos; devolve False se a lista estiver vazia
+        print(titulo)
+        if len(linhas) == 0:
+            print(f"  {mensagem_vazia}")
+            return False
+        for linha in linhas:
+            print(f"  - {linha}")
+        return True
+
+    def __resumos(self, emprestimos):
+        # transforma uma lista de empréstimos em uma lista de textos
+        linhas = []
+        for emprestimo in emprestimos:
+            linhas.append(emprestimo.resumo(self.__atletica.data_atual))
+        return linhas
+
+
+def main():
+    
+if __name__ == "__main__":
+    main()
