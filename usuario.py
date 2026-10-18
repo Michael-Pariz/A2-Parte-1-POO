@@ -24,3 +24,7 @@ class Usuario(ABC):
     @property
     def duracao_bloqueio(self):
         return self._duracao_bloqueio
+
+    #Numero de emprestimos realizados
+    def emprestimos(self, emprestimo):
+        self._historico.append(emprestimo)
