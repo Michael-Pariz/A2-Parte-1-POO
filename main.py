@@ -127,6 +127,16 @@ class Menu:
             print(f"Devolvido com {atraso} dia(s) de atraso. {usuario.nome} ficou {situacao}.")
         else:
             print("Devolvido dentro do prazo.")
+            
+    def __listar_disponiveis(self):
+        linhas = []
+        for equipamento in self.__atletica.listar_disponiveis():
+            linhas.append(f"{equipamento} - prazo: {equipamento.descricao_prazo()}")
+        self.__imprimir_lista("Equipamentos disponíveis:", linhas, "Nenhum equipamento disponível.")
+
+    def __listar_emprestados(self):
+        linhas = self.__resumos(self.__atletica.emprestimos_ativos())
+        self.__imprimir_lista("Equipamentos emprestados:", linhas, "Nenhum equipamento emprestado.")
 
 def main():
     
