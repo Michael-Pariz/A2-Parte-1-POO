@@ -82,6 +82,51 @@ class Menu:
             linhas.append(emprestimo.resumo(self.__atletica.data_atual))
         return linhas
 
+    # ---------- empréstimo e devolução ----------
+
+    def __emprestar(self):
+        linhas = []
+        for equipamento in self.__atletica.listar_disponiveis():
+            linhas.append(str(equipamento))
+        if not self.__imprimir_lista("Equipamentos disponíveis:", linhas,
+                                     "Nenhum equipamento disponível no momento."):
+            return
+
+        codigo = ler_inteiro("\nCódigo do equipamento: ", minimo=1)
+        matricula = ler_texto("Matrícula de quem vai pegar: ")
+        emprestimo = self.__atletica.emprestar(matricula, codigo)
+        print(f"\nEmpréstimo registrado: {emprestimo.equipamento} com {emprestimo.usuario.nome}.")
+        print(f"Devolver até {formatar_data(emprestimo.data_limite)}.")
+
+    def __devolver(self):
+        linhas = self.__resumos(self.__atletica.emprestimos_ativos())
+        if not self.__imprimir_lista("Equipamentos emprestados:", linhas,
+                                     "Nenhum equipamento emprestado no momento."):
+            return
+
+        codigo = ler_inteiro("\nCódigo do equipamento devolvido: ", minimo=1)
+        equipamento = self.__atletica.emprestimo_ativo_do(codigo).equipamento
+
+        danificado = False
+        resultados_vistoria = None
+        if equipamento.precisa_vistoria():
+            print("Vistoria da devolução:")
+            resultados_vistoria = {}
+            for item in equipamento.itens_vistoria():
+                resultados_vistoria[item] = ler_sim_nao(f"  O(a) {item} está em bom estado? (s/n): ")
+        else:
+            danificado = ler_sim_nao("O equipamento voltou danificado? (s/n): ")
+
+        emprestimo = self.__atletica.devolver(codigo, danificado, resultados_vistoria)
+        print(f"\nDevolução registrada: {equipamento} ({emprestimo.estado_devolucao()}).")
+
+        atraso = emprestimo.dias_atraso()
+        if atraso > 0:
+            usuario = emprestimo.usuario
+            situacao = usuario.situacao(self.__atletica.data_atual)
+            print(f"Devolvido com {atraso} dia(s) de atraso. {usuario.nome} ficou {situacao}.")
+        else:
+            print("Devolvido dentro do prazo.")
 
 def main():
     
