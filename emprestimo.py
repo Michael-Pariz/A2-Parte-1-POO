@@ -70,8 +70,15 @@ class Emprestimo:
         self._vistoria = vistoria
 
         #verifica se a devolução foi feita após o prazo de devolução e calcula os dias de atraso
-        if data_devolucao > self._prazo_devolucao:
-            self._dias_atraso = (data_devolucao - self._prazo_devolucao).days
+        if data_devolucao > self.__prazo:
+            segundos_atraso = (
+                data_devolucao - self.__prazo
+            ).total_seconds()
+
+            #pega a quantidade de segundos atrasados e converte para dias, arredondando para cima com ceil, e garantindo que seja no minimo 1 dia.
+            self.__dias_atraso = max(
+                1, ceil(segundos_atraso / 86400)
+            )
 
         #verifica se a vistoria foi realizada e se o equipamento está danificado
         if vistoria is not None:
