@@ -1,9 +1,10 @@
 from atletica import Atletica
-from datas import formatar_data
+from data import formatar_data_hora
 from entrada import escolher, ler_data, ler_inteiro, ler_sim_nao, ler_texto
 from equipamentos import Bicicleta, Bola, Colete, Raquete
 from excecoes import ErroAtletica
-from usuarios import Aluno, Servidor
+from usuario import Aluno, Servidor
+from vistoria import Vistoria
 
 
 class Menu:
@@ -55,7 +56,7 @@ class Menu:
 
     def __mostrar_menu(self):
         print("\n========== CONTROLE DE EMPRÉSTIMOS - ATLÉTICA ==========")
-        print(f"Data do sistema: {formatar_data(self.__atletica.data_atual)}")
+        print(f"Data do sistema: {formatar_data_hora(self.__atletica.agora())}")
         print("  1 - Emprestar equipamento")
         print("  2 - Devolver equipamento")
         print("  3 - Ver equipamentos disponíveis")
@@ -84,7 +85,7 @@ class Menu:
         # transforma uma lista de empréstimos em uma lista de textos
         linhas = []
         for emprestimo in emprestimos:
-            linhas.append(emprestimo.resumo(self.__atletica.data_atual))
+            linhas.append(emprestimo.resumo(self.__atletica.agora()))
         return linhas
 
     # ---------- empréstimo e devolução ----------
@@ -97,11 +98,11 @@ class Menu:
                                      "Nenhum equipamento disponível no momento."):
             return
 
-        codigo = ler_inteiro("\nCódigo do equipamento: ", minimo=1)
-        matricula = ler_texto("Matrícula de quem vai pegar: ")
-        emprestimo = self.__atletica.emprestar(matricula, codigo)
+        id = ler_inteiro("\nID do equipamento: ", minimo=1)
+        ra = ler_texto("RA de quem vai pegar: ")
+        emprestimo = self.__atletica.emprestar(ra, id)
         print(f"\nEmpréstimo registrado: {emprestimo.equipamento} com {emprestimo.usuario.nome}.")
-        print(f"Devolver até {formatar_data(emprestimo.data_limite)}.")
+        print(f"Devolver até {formatar_data_hora(emprestimo.prazo_devolucao)}.")
 
     def __devolver(self):
         linhas = self.__resumos(self.__atletica.emprestimos_ativos())
@@ -109,27 +110,27 @@ class Menu:
                                      "Nenhum equipamento emprestado no momento."):
             return
 
-        codigo = ler_inteiro("\nCódigo do equipamento devolvido: ", minimo=1)
-        equipamento = self.__atletica.emprestimo_ativo_do(codigo).equipamento
+        id = ler_inteiro("\nID do equipamento devolvido: ", minimo=1)
+        equipamento = self.__atletica.emprestimo_ativo_do(id).equipamento
 
+        vistoria = None
         danificado = False
-        resultados_vistoria = None
         if equipamento.precisa_vistoria():
             print("Vistoria da devolução:")
-            resultados_vistoria = {}
-            for item in equipamento.itens_vistoria():
-                resultados_vistoria[item] = ler_sim_nao(f"  O(a) {item} está em bom estado? (s/n): ")
+            pneus = ler_sim_nao("  Os pneus estão em bom estado? (s/n): ")
+            freios = ler_sim_nao("  Os freios estão em bom estado? (s/n): ")
+            correntes = ler_sim_nao("  A corrente está em bom estado? (s/n): ")
+            vistoria = Vistoria(pneus, freios, correntes)
         else:
             danificado = ler_sim_nao("O equipamento voltou danificado? (s/n): ")
 
-        emprestimo = self.__atletica.devolver(codigo, danificado, resultados_vistoria)
+        emprestimo = self.__atletica.devolver(id, vistoria, danificado)
         print(f"\nDevolução registrada: {equipamento} ({emprestimo.estado_devolucao()}).")
 
-        atraso = emprestimo.dias_atraso()
-        if atraso > 0:
+        if emprestimo.dias_atraso > 0:
             usuario = emprestimo.usuario
-            situacao = usuario.situacao(self.__atletica.data_atual)
-            print(f"Devolvido com {atraso} dia(s) de atraso. {usuario.nome} ficou {situacao}.")
+            situacao = usuario.situacao(self.__atletica.agora())
+            print(f"Devolvido com {emprestimo.dias_atraso} dia(s) de atraso. {usuario.nome} ficou {situacao}.")
         else:
             print("Devolvido dentro do prazo.")
 
@@ -145,11 +146,10 @@ class Menu:
         linhas = self.__resumos(self.__atletica.emprestimos_ativos())
         self.__imprimir_lista("Equipamentos emprestados:", linhas, "Nenhum equipamento emprestado.")
 
-
     def __historico_pessoa(self):
-        usuario = self.__atletica.buscar_usuario(ler_texto("Matrícula: "))
+        usuario = self.__atletica.buscar_usuario(ler_texto("RA: "))
         print(f"\n{usuario}")
-        print(f"Situação: {usuario.situacao(self.__atletica.data_atual)}")
+        print(f"Situação: {usuario.situacao(self.__atletica.agora())}")
         print(f"Itens com a pessoa agora: {len(usuario.emprestimos_ativos())} de {usuario.limite_itens()}")
         print(f"Devoluções com atraso: {usuario.total_devolucoes_com_atraso()}")
         print(f"Devoluções com dano: {usuario.total_devolucoes_danificadas()}")
@@ -157,24 +157,24 @@ class Menu:
         self.__imprimir_lista("Histórico:", linhas, "Nenhum empréstimo registrado.")
 
     def __historico_equipamento(self):
-        codigo = ler_inteiro("Código do equipamento: ", minimo=1)
-        historico = self.__atletica.historico_equipamento(codigo)
+        id = ler_inteiro("ID do equipamento: ", minimo=1)
+        historico = self.__atletica.historico_equipamento(id)
 
         danificados = 0
         for emprestimo in historico:
-            if emprestimo.devolvido_danificado:
+            if not emprestimo.esta_ativo() and emprestimo.danificado:
                 danificados = danificados + 1
 
-        print(f"\n{self.__atletica.buscar_equipamento(codigo)}")
+        print(f"\n{self.__atletica.buscar_equipamento(id)}")
         print(f"Vezes emprestado: {len(historico)} | Devoluções com dano: {danificados}")
         linhas = self.__resumos(historico)
         self.__imprimir_lista("Histórico:", linhas, "Este equipamento ainda não foi emprestado.")
 
     def __listar_pessoas(self):
         linhas = []
-        for usuario in self.__atletica.listar_usuarios():
+        for usuario in self.__atletica.usuarios:
             quantidade = len(usuario.emprestimos_ativos())
-            situacao = usuario.situacao(self.__atletica.data_atual)
+            situacao = usuario.situacao(self.__atletica.agora())
             linhas.append(f"{usuario} - {quantidade}/{usuario.limite_itens()} itens - {situacao}")
         self.__imprimir_lista("Pessoas cadastradas:", linhas, "Nenhuma pessoa cadastrada.")
 
@@ -182,50 +182,47 @@ class Menu:
 
     def __cadastrar_pessoa(self):
         tipo = escolher("Tipo de pessoa:", ["Aluno", "Servidor"])
+        ra = ler_texto("RA: ")
         nome = ler_texto("Nome: ")
-        matricula = ler_texto("Matrícula: ")
 
         if tipo == 0:
-            usuario = Aluno(nome, matricula)
+            usuario = Aluno(ra, nome)
         else:
-            usuario = Servidor(nome, matricula)
+            usuario = Servidor(ra, nome)
 
         self.__atletica.cadastrar_usuario(usuario)
         print(f"\nCadastrado: {usuario}. Pode ter até {usuario.limite_itens()} itens ao mesmo tempo.")
 
     def __cadastrar_equipamento(self):
         tipo = escolher("Tipo de equipamento:", ["Bola", "Raquete de tênis de mesa", "Colete", "Bicicleta"])
-        modalidade = ""
-        if tipo == 0:
-            modalidade = Bola.MODALIDADES[escolher("Modalidade:", Bola.MODALIDADES)]
-        descricao = input("Descrição (opcional, ex: cor, marca, número): ")
+        nome = ler_texto("Descrição (ex: futsal, vermelha, azul nº 7, Caloi preta): ")
 
-        codigo = self.__atletica.gerar_codigo()
+        id = self.__atletica.gerar_id()
         if tipo == 0:
-            equipamento = Bola(codigo, modalidade, descricao)
+            equipamento = Bola(id, nome)
         elif tipo == 1:
-            equipamento = Raquete(codigo, descricao)
+            equipamento = Raquete(id, nome)
         elif tipo == 2:
-            equipamento = Colete(codigo, descricao)
+            equipamento = Colete(id, nome)
         else:
-            equipamento = Bicicleta(codigo, descricao)
+            equipamento = Bicicleta(id, nome)
 
         self.__atletica.cadastrar_equipamento(equipamento)
         print(f"\nCadastrado: {equipamento}. Prazo de empréstimo: {equipamento.descricao_prazo()}.")
 
     def __remover_pessoa(self):
-        usuario = self.__atletica.buscar_usuario(ler_texto("Matrícula: "))
+        usuario = self.__atletica.buscar_usuario(ler_texto("RA: "))
         if ler_sim_nao(f"Remover {usuario}? (s/n): "):
-            self.__atletica.remover_usuario(usuario.matricula)
+            self.__atletica.remover_usuario(usuario.ra)
             print("Pessoa removida.")
         else:
             print("Remoção cancelada.")
 
     def __remover_equipamento(self):
-        codigo = ler_inteiro("Código do equipamento: ", minimo=1)
-        equipamento = self.__atletica.buscar_equipamento(codigo)
+        id = ler_inteiro("ID do equipamento: ", minimo=1)
+        equipamento = self.__atletica.buscar_equipamento(id)
         if ler_sim_nao(f"Remover {equipamento}? (s/n): "):
-            self.__atletica.remover_equipamento(codigo)
+            self.__atletica.remover_equipamento(id)
             print("Equipamento removido.")
         else:
             print("Remoção cancelada.")
@@ -239,19 +236,19 @@ class Menu:
         else:
             nova_data = ler_data("Nova data (dd/mm/aaaa): ")
             self.__atletica.definir_data(nova_data)
-        print(f"Data do sistema agora: {formatar_data(self.__atletica.data_atual)}")
+        print(f"Data do sistema agora: {formatar_data_hora(self.__atletica.agora())}")
 
 
 def carregar_dados_exemplo(atletica):
-    atletica.cadastrar_usuario(Aluno("Ana Souza", "2024001"))
-    atletica.cadastrar_usuario(Aluno("Bruno Lima", "2024002"))
-    atletica.cadastrar_usuario(Servidor("Carla Mendes", "S1001"))
-    atletica.cadastrar_equipamento(Bola(atletica.gerar_codigo(), "futsal"))
-    atletica.cadastrar_equipamento(Bola(atletica.gerar_codigo(), "vôlei"))
-    atletica.cadastrar_equipamento(Bola(atletica.gerar_codigo(), "basquete"))
-    atletica.cadastrar_equipamento(Raquete(atletica.gerar_codigo(), "vermelha"))
-    atletica.cadastrar_equipamento(Colete(atletica.gerar_codigo(), "azul nº 7"))
-    atletica.cadastrar_equipamento(Bicicleta(atletica.gerar_codigo(), "Caloi preta"))
+    atletica.cadastrar_usuario(Aluno("2024001", "Ana Souza"))
+    atletica.cadastrar_usuario(Aluno("2024002", "Bruno Lima"))
+    atletica.cadastrar_usuario(Servidor("S1001", "Carla Mendes"))
+    atletica.cadastrar_equipamento(Bola(atletica.gerar_id(), "futsal"))
+    atletica.cadastrar_equipamento(Bola(atletica.gerar_id(), "vôlei"))
+    atletica.cadastrar_equipamento(Bola(atletica.gerar_id(), "basquete"))
+    atletica.cadastrar_equipamento(Raquete(atletica.gerar_id(), "vermelha"))
+    atletica.cadastrar_equipamento(Colete(atletica.gerar_id(), "azul nº 7"))
+    atletica.cadastrar_equipamento(Bicicleta(atletica.gerar_id(), "Caloi preta"))
 
 
 def main():
