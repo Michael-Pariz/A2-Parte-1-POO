@@ -1,3 +1,4 @@
+from math import ceil
 from datetime import datetime
 from equipamentos import Bicicleta
 
@@ -70,9 +71,9 @@ class Emprestimo:
         self._vistoria = vistoria
 
         #verifica se a devolução foi feita após o prazo de devolução e calcula os dias de atraso
-        if data_devolucao > self.__prazo:
+        if data_devolucao > self.__prazo_devolucao:
             segundos_atraso = (
-                data_devolucao - self.__prazo
+                data_devolucao - self.__prazo_devolucao
             ).total_seconds()
 
             #pega a quantidade de segundos atrasados e converte para dias, arredondando para cima com ceil, e garantindo que seja no minimo 1 dia.
