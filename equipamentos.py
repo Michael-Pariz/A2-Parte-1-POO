@@ -3,7 +3,7 @@ from datetime import timedelta
 
 #Superclasse abstrata Equipamento
 class Equipamento(ABC):
-    def __init__(self,id,nome):
+    def __init__(self, id, nome):
         self._id = id
         self._nome = nome
         self._disponivel = True
@@ -22,38 +22,74 @@ class Equipamento(ABC):
     def disponivel(self):
         return self._disponivel
 
-    #Metodo para calcular o prazo de devolução, o pass serve para que cada subclasse tenha sua própria implementação do método
+    #Métodos para mudar a disponibilidade quando o equipamento é emprestado ou devolvido
+    def marcar_emprestado(self):
+        self._disponivel = False
+
+    def marcar_disponivel(self):
+        self._disponivel = True
+
+    #Cada subclasse informa qual é o seu tipo
     @abstractmethod
-    def calcular_prazo(self,devolucao): 
-        pass   
+    def tipo(self):
+        pass
+
+    #Cada subclasse informa quantos dias tem de prazo (0 = devolver no mesmo dia)
+    @abstractmethod
+    def prazo_dias(self):
+        pass
+
+    #Metodo para calcular o prazo de devolução: soma os dias do prazo à data de retirada
+    #e vai até 23:59:59 desse dia. Fica na superclasse para não repetir o código nas subclasses
+    def calcular_prazo(self, retirada):
+        return (retirada + timedelta(days=self.prazo_dias())).replace(
+            hour=23,
+            minute=59,
+            second=59,
+            microsecond=0
+        )
+
+    #Por padrão o equipamento não passa por vistoria na devolução
+    def precisa_vistoria(self):
+        return False
+
+    def descricao_prazo(self):
+        if self.prazo_dias() == 0:
+            return "devolver no mesmo dia"
+        return f"{self.prazo_dias()} dia(s)"
+
+    def __str__(self):
+        return f"#{self._id} - {self.tipo()} ({self._nome})"
 
 #Subclasses
 class Bola(Equipamento):
-    def calcular_prazo(self, devolucao):
-        return devolucao.replace(
-            hour=23, minute=59, second=59, microsecond=0
-        )
+    def tipo(self):
+        return "Bola"
+
+    def prazo_dias(self):
+        return 0
 
 class Colete(Equipamento):
-    def calcular_prazo(self, devolucao):
-        return devolucao.replace(
-            hour=23, minute=59, second=59, microsecond=0
-        )
+    def tipo(self):
+        return "Colete"
+
+    def prazo_dias(self):
+        return 0
 
 class Raquete(Equipamento):
-    def calcular_prazo(self, devolucao):
-        return (devolucao + timedelta(days=2)).replace(
-            hour=23,
-            minute=59,
-            second=59,
-            microsecond=0
-        )
+    def tipo(self):
+        return "Raquete de tênis de mesa"
+
+    def prazo_dias(self):
+        return 2
 
 class Bicicleta(Equipamento):
-    def calcular_prazo(self, devolucao):
-        return (devolucao + timedelta(days=7)).replace(
-            hour=23,
-            minute=59,
-            second=59,
-            microsecond=0
-        )
+    def tipo(self):
+        return "Bicicleta"
+
+    def prazo_dias(self):
+        return 7
+
+    #A bicicleta é o único equipamento que passa por vistoria
+    def precisa_vistoria(self):
+        return True
