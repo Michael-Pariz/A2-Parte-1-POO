@@ -24,7 +24,7 @@ class Equipamento(ABC):
 
     #Metodo para calcular o prazo de devolução, o pass serve para que cada subclasse tenha sua própria implementação do método
     @abstractmethod
-    def cal_prazo_devolucao(self,devolucao): 
+    def calcular_prazo(self,devolucao): 
         pass   
 
 #Subclasses
@@ -41,7 +41,7 @@ class Colete(Equipamento):
         )
 
 class Raquete(Equipamento):
-    def calcular_prazo_devolucao(self, devolucao):
+    def calcular_prazo(self, devolucao):
         return (devolucao + timedelta(days=2)).replace(
             hour=23,
             minute=59,
@@ -50,7 +50,7 @@ class Raquete(Equipamento):
         )
 
 class Bicicleta(Equipamento):
-    def calcular_prazo_devolucao(self, devolucao):
+    def calcular_prazo(self, devolucao):
         return (devolucao + timedelta(days=7)).replace(
             hour=23,
             minute=59,
