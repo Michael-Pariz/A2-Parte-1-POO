@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from datas import FORMATO_DATA
+from data import FORMATO_DATA
 
 
 def ler_texto(mensagem):
