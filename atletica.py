@@ -21,7 +21,19 @@ class Atletica:
         return self.__emprestimos.copy()
 
     def cadastrar_usuario(self, usuario):
-        if usuario in self.__usuarios:
-            raise ValueError("Usuário já cadastrado.")
+        if any(
+        u.ra == usuario.ra
+        for u in self.__usuarios
+        ):
+            raise ValueError("Já existe um usuário com esse ra.")
 
         self.__usuarios.append(usuario)
+
+    def cadastrar_equipamento(self, equipamento):
+        if any(
+        e.id == equipamento.id
+        for e in self.__equipamentos
+        ):
+            raise ValueError("Já existe um equipamento com esse ID.")
+
+        self.__equipamentos.append(equipamento)
