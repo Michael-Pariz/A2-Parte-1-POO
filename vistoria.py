@@ -14,6 +14,6 @@ class Vistoria:
     def __str__(self):
         return (
             f"Pneus: {'OK' if self._pneus else 'DANIFICADO'} | " 
-            f"Freios: {'OK' if self._freios else 'DANIFICADO'} |" 
+            f"Freios: {'OK' if self._freios else 'DANIFICADO'} | "
             f"Correntes: {'OK' if self._correntes else 'DANIFICADO'}"
         )
