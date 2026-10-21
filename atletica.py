@@ -8,52 +8,51 @@ class Atletica:
     FATOR_BLOQUEIO = 2  #dias de bloqueio para cada dia de atraso
 
     def __init__(self):
-        self.__usuarios = []
-        self.__equipamentos = []
-        self.__emprestimos = []
-        self.__proximo_id = 1
-        self.__dias_avancados = 0  #usado para simular a passagem dos dias nos testes
+        self._usuarios = []
+        self._equipamentos = []
+        self._emprestimos = []
+        self._proximo_id = 1
+        self._dias_avancados = 0  #usado para simular a passagem dos dias nos testes
 
     @property
     def usuarios(self):
-        return self.__usuarios.copy()
+        return self._usuarios.copy()
 
     @property
     def equipamentos(self):
-        return self.__equipamentos.copy()
+        return self._equipamentos.copy()
 
     @property
     def emprestimos(self):
-        return self.__emprestimos.copy()
+        return self._emprestimos.copy()
 
     # data do sistema 
 
-    #Data e hora atual do sistema (hora real + os dias avançados para teste)
     def agora(self):
-        return datetime.now() + timedelta(days=self.__dias_avancados)
+        return datetime.now() + timedelta(days=self._dias_avancados)
 
     def avancar_dias(self, dias):
         if dias < 1:
             raise ErroAtletica("Informe pelo menos 1 dia.")
-        self.__dias_avancados = self.__dias_avancados + dias
+        self._dias_avancados = self._dias_avancados + dias
 
     def definir_data(self, nova_data):
         diferenca = (nova_data - self.agora().date()).days
         if diferenca < 0:
             raise ErroAtletica("A nova data não pode ser anterior à data atual do sistema.")
-        self.__dias_avancados = self.__dias_avancados + diferenca
+        self._dias_avancados = self._dias_avancados + diferenca
 
     # usuários
 
     def cadastrar_usuario(self, usuario):
-        for u in self.__usuarios:
+        for u in self._usuarios:
             if u.ra == usuario.ra:
                 raise ErroAtletica("Já existe um usuário com esse RA.")
 
-        self.__usuarios.append(usuario)
+        self._usuarios.append(usuario)
 
     def buscar_usuario(self, ra):
-        for usuario in self.__usuarios:
+        for usuario in self._usuarios:
             if usuario.ra == ra:
                 return usuario
         raise ErroAtletica(f"Nenhum usuário cadastrado com o RA {ra}.")
@@ -63,24 +62,24 @@ class Atletica:
         if len(usuario.emprestimos_ativos()) > 0:
             raise ErroAtletica(f"{usuario.nome} ainda está com item(ns) emprestado(s). "
                                f"Registre a devolução antes de remover.")
-        self.__usuarios.remove(usuario)
+        self._usuarios.remove(usuario)
 
     # equipamentos 
 
     def gerar_id(self):
-        id = self.__proximo_id
-        self.__proximo_id = self.__proximo_id + 1
+        id = self._proximo_id
+        self._proximo_id = self._proximo_id + 1
         return id
 
     def cadastrar_equipamento(self, equipamento):
-        for e in self.__equipamentos:
+        for e in self._equipamentos:
             if e.id == equipamento.id:
                 raise ErroAtletica("Já existe um equipamento com esse ID.")
 
-        self.__equipamentos.append(equipamento)
+        self._equipamentos.append(equipamento)
 
     def buscar_equipamento(self, id):
-        for equipamento in self.__equipamentos:
+        for equipamento in self._equipamentos:
             if equipamento.id == id:
                 return equipamento
         raise ErroAtletica(f"Nenhum equipamento cadastrado com o ID {id}.")
@@ -89,11 +88,11 @@ class Atletica:
         equipamento = self.buscar_equipamento(id)
         if not equipamento.disponivel:
             raise ErroAtletica(f"{equipamento} está emprestado. Registre a devolução antes de remover.")
-        self.__equipamentos.remove(equipamento)
+        self._equipamentos.remove(equipamento)
 
     def listar_disponiveis(self):
         disponiveis = []
-        for equipamento in self.__equipamentos:
+        for equipamento in self._equipamentos:
             if equipamento.disponivel:
                 disponiveis.append(equipamento)
         return disponiveis
@@ -102,14 +101,14 @@ class Atletica:
 
     def emprestimos_ativos(self):
         ativos = []
-        for emprestimo in self.__emprestimos:
+        for emprestimo in self._emprestimos:
             if emprestimo.esta_ativo():
                 ativos.append(emprestimo)
         return ativos
 
     def emprestimo_ativo_do(self, id):
         equipamento = self.buscar_equipamento(id)
-        for emprestimo in self.__emprestimos:
+        for emprestimo in self._emprestimos:
             if emprestimo.esta_ativo() and emprestimo.equipamento.id == id:
                 return emprestimo
         raise ErroAtletica(f"{equipamento} não está emprestado.")
@@ -127,7 +126,7 @@ class Atletica:
         emprestimo = Emprestimo(usuario, equipamento, agora)
         equipamento.marcar_emprestado()
         usuario.adicionar_emprestimo(emprestimo)
-        self.__emprestimos.append(emprestimo)
+        self._emprestimos.append(emprestimo)
         return emprestimo
 
     def devolver(self, id, vistoria=None, danificado=False):
@@ -137,6 +136,7 @@ class Atletica:
         emprestimo.equipamento.marcar_disponivel()
 
         #bloqueio: o dobro dos dias de atraso, contado a partir da devolução
+        
         if dias_atraso > 0:
             fim_bloqueio = agora + timedelta(days=dias_atraso * self.FATOR_BLOQUEIO)
             emprestimo.usuario.bloqueio(fim_bloqueio)
@@ -145,7 +145,16 @@ class Atletica:
     def historico_equipamento(self, id):
         self.buscar_equipamento(id)  #só para avisar se o ID não existe
         historico = []
-        for emprestimo in self.__emprestimos:
+        for emprestimo in self._emprestimos:
             if emprestimo.equipamento.id == id:
                 historico.append(emprestimo)
         return historico
+
+    #conta quantas vezes o equipamento foi devolvido danificado
+    
+    def total_devolucoes_danificadas(self, id):
+        total = 0
+        for emprestimo in self.historico_equipamento(id):
+            if not emprestimo.esta_ativo() and emprestimo.danificado:
+                total = total + 1
+        return total
