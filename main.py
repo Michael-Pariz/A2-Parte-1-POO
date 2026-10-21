@@ -72,7 +72,9 @@ class Menu:
         print("  0 - Sair")
 
     def __imprimir_lista(self, titulo, linhas, mensagem_vazia):
+
         # mostra uma lista de textos; devolve False se a lista estiver vazia
+        
         print(titulo)
         if len(linhas) == 0:
             print(f"  {mensagem_vazia}")
@@ -82,7 +84,9 @@ class Menu:
         return True
 
     def __resumos(self, emprestimos):
+        
         # transforma uma lista de empréstimos em uma lista de textos
+        
         linhas = []
         for emprestimo in emprestimos:
             linhas.append(emprestimo.resumo(self.__atletica.agora()))
@@ -159,11 +163,7 @@ class Menu:
     def __historico_equipamento(self):
         id = ler_inteiro("ID do equipamento: ", minimo=1)
         historico = self.__atletica.historico_equipamento(id)
-
-        danificados = 0
-        for emprestimo in historico:
-            if not emprestimo.esta_ativo() and emprestimo.danificado:
-                danificados = danificados + 1
+        danificados = self.__atletica.total_devolucoes_danificadas(id)
 
         print(f"\n{self.__atletica.buscar_equipamento(id)}")
         print(f"Vezes emprestado: {len(historico)} | Devoluções com dano: {danificados}")
