@@ -88,7 +88,7 @@ class Menu:
             linhas.append(emprestimo.resumo(self.__atletica.agora()))
         return linhas
 
-    # ---------- empréstimo e devolução ----------
+    # empréstimo e devolução 
 
     def __emprestar(self):
         linhas = []
@@ -134,7 +134,7 @@ class Menu:
         else:
             print("Devolvido dentro do prazo.")
 
-    # ---------- consultas ----------
+    # consultas
 
     def __listar_disponiveis(self):
         linhas = []
@@ -178,7 +178,7 @@ class Menu:
             linhas.append(f"{usuario} - {quantidade}/{usuario.limite_itens()} itens - {situacao}")
         self.__imprimir_lista("Pessoas cadastradas:", linhas, "Nenhuma pessoa cadastrada.")
 
-    # ---------- cadastros ----------
+    # cadastros 
 
     def __cadastrar_pessoa(self):
         tipo = escolher("Tipo de pessoa:", ["Aluno", "Servidor"])
