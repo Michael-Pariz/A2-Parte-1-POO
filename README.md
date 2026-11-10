@@ -12,6 +12,8 @@ Requisito: Python 3.10 ou mais recente (não usa bibliotecas externas).
 
 ```
 python main.py
+ou
+python3 main.py
 ```
 
 Ao abrir, o sistema pergunta se deseja carregar dados de exemplo para teste.
